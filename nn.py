@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
@@ -13,8 +14,17 @@ def neural_network(data):
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
     print("Training set shape:", x_train.shape, y_train.shape)
     print("Testing set shape:", x_test.shape, y_test.shape)
+    # Convert data to float type
+    x_train = x_train.astype(np.float32)
+    y_train = y_train.astype(np.float32)
+
+    # Convert to NumPy arrays
+    x_train = np.array(x_train)
+    y_train = np.array(y_train)
+
     # Create a PyTorch dataset
-    train_dataset = TensorDataset(x_train, y_train)
+    train_dataset = TensorDataset(torch.Tensor(x_train), torch.Tensor(y_train))
+
 
     # Create data loaders for batch processing
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
@@ -38,6 +48,7 @@ def neural_network(data):
         for inputs, targets in train_loader:
             optimizer.zero_grad()
             outputs = model(inputs)
+            targets = targets.view(-1, 1) # reshape the targets to match the shape of outputs
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()

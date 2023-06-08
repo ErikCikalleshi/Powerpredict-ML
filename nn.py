@@ -52,5 +52,5 @@ def neural_network(data):
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
-
+    
     return model

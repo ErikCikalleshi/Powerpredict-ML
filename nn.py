@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 
 
-def neural_network(x_train, y_train):
+def neural_network(x_train, y_train, x_val, y_val, num_epochs):
     # Create a PyTorch dataset
     train_dataset = TensorDataset(torch.Tensor(x_train), torch.Tensor(y_train))
 
@@ -27,7 +27,7 @@ def neural_network(x_train, y_train):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # Train the model
-    num_epochs = 10
+
     for epoch in range(num_epochs):
         for inputs, targets in train_loader:
             optimizer.zero_grad()
@@ -38,5 +38,6 @@ def neural_network(x_train, y_train):
             optimizer.step()
 
     return model
+
 
 

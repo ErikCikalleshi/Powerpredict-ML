@@ -12,19 +12,22 @@ from nn import neural_network
 # init model globally
 model = None
 
+
 def get_encoded(powerpredict):
-    powerpredict = powerpredict.dropna()  # drop rows with missing values
 
     categorical_cols = powerpredict.select_dtypes(
         include=['object']).columns  # get columns where we have to encode the data
 
     encoded_df = pd.get_dummies(powerpredict, columns=categorical_cols)
+    encoded_df = encoded_df.fillna(encoded_df.mean())  # drop rows with missing values
+
     return encoded_df
 
 
 def leader_board_predict_fn(values):
+    global model
     values_encoded = get_encoded(values)
-    #values_encoded = values_encoded.reindex(columns=x_train.columns, fill_value=0)
+    # values_encoded = values_encoded.reindex(columns=x_train.columns, fill_value=0)
 
     # Convert values_encoded to float type
     values_encoded = values_encoded.astype(float)
@@ -36,9 +39,10 @@ def leader_board_predict_fn(values):
 
 
 def best_epochs():
+    global model
     num_epochs = 10
     epoch_losses = []
-    for epoch in range(1, num_epochs+1):
+    for epoch in range(1, num_epochs + 1):
         model = neural_network(x_train.values.astype(float), y_train.values.astype(float),
                                x_val.values.astype(float), y_val.values.astype(float), epoch)
         y_predict = leader_board_predict_fn(X_test)
@@ -46,8 +50,8 @@ def best_epochs():
         print("Mean Absolute Error (MAE):", epoch_mae)
         epoch_losses.append(epoch_mae)
 
-    #Create a chart
-    plt.plot(range(1, num_epochs+1), epoch_losses, marker='o')
+    # Create a chart
+    plt.plot(range(1, num_epochs + 1), epoch_losses, marker='o')
     plt.xlabel('Epoch')
     plt.ylabel('Mean Absolute Error (MAE)')
     plt.title('Model Performance across Epochs')
@@ -66,18 +70,20 @@ if __name__ == "__main__":
 
     x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 
-    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                           y_val.values.astype(float), 6)
-    best_epochs()
-    actual_values = encoded_values["power_consumption"]
+    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                        y_val.values.astype(float), 10)
     X_test = powerpredict_df.drop(columns=["power_consumption"])
+    actual_values = encoded_values["power_consumption"]
+
     y_test = powerpredict_df["power_consumption"]
+
+    best_epochs()
+
+
     # Get the predicted values using the model
     y_predict = leader_board_predict_fn(X_test)
     #
     # # Calculate evaluation metrics
-    mae = mean_absolute_error(y_test, y_predict)
+    #mae = mean_absolute_error(y_test, y_predict)
 
-    # print("Mean Absolute Error (MAE):", mae)
-
-
+    #print("Mean Absolute Error (MAE):", mae)

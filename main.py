@@ -13,7 +13,29 @@ from nn import neural_network
 model = None
 
 
+def get_encodedV2(powerpredict):
+    correlation_threshold = 0.05
+    categorical_cols = powerpredict.select_dtypes(include=['object']).columns
+    encoded_df = pd.get_dummies(powerpredict, columns=categorical_cols)
+    encoded_df = encoded_df.fillna(encoded_df.mean())
+
+    # Calculate correlation matrix
+    correlation_matrix = encoded_df.corr().abs()
+
+    # Select upper triangle of correlation matrix
+    upper = correlation_matrix.where(np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool_))
+
+    # Find index of feature columns with correlation lower than correlation_threshold and do not include power_consumption
+    to_drop = [column for column in upper.columns if
+               any(upper[column] < correlation_threshold) and column != "power_consumption"]
+
+    # Drop features with lower correlation
+    encoded_df = encoded_df.drop(encoded_df[to_drop], axis=1)
+    return encoded_df
+
+
 def get_encoded(powerpredict):
+    powerpredict = powerpredict.dropna()  # drop rows with missing values
 
     categorical_cols = powerpredict.select_dtypes(
         include=['object']).columns  # get columns where we have to encode the data
@@ -42,16 +64,16 @@ def best_epochs():
     global model
     num_epochs = 10
     epoch_losses = []
-    for epoch in range(1, num_epochs + 1):
+    for epoch in range(6, num_epochs + 1):
         model = neural_network(x_train.values.astype(float), y_train.values.astype(float),
                                x_val.values.astype(float), y_val.values.astype(float), epoch)
         y_predict = leader_board_predict_fn(X_test)
         epoch_mae = mean_absolute_error(y_test, y_predict)
-        print("Mean Absolute Error (MAE):", epoch_mae)
+        print(epoch, "Mean Absolute Error (MAE):", epoch_mae)
         epoch_losses.append(epoch_mae)
 
     # Create a chart
-    plt.plot(range(1, num_epochs + 1), epoch_losses, marker='o')
+    plt.plot(range(6, num_epochs + 1), epoch_losses, marker='o')
     plt.xlabel('Epoch')
     plt.ylabel('Mean Absolute Error (MAE)')
     plt.title('Model Performance across Epochs')
@@ -59,8 +81,6 @@ def best_epochs():
 
 
 if __name__ == "__main__":
-    print(torch.cuda.is_available())
-
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
     encoded_values = get_encoded(powerpredict_df)
@@ -68,7 +88,7 @@ if __name__ == "__main__":
     x = encoded_values.drop("power_consumption", axis=1)
     y = encoded_values["power_consumption"]
 
-    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
 
     # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
     #                        y_val.values.astype(float), 10)
@@ -79,11 +99,4 @@ if __name__ == "__main__":
 
     best_epochs()
 
-
-    # Get the predicted values using the model
-    y_predict = leader_board_predict_fn(X_test)
-    #
-    # # Calculate evaluation metrics
-    #mae = mean_absolute_error(y_test, y_predict)
-
-    #print("Mean Absolute Error (MAE):", mae)
+    # y_predict = leader_board_predict_fn(X_test)

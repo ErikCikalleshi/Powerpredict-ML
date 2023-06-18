@@ -80,6 +80,27 @@ def best_epochs():
     plt.show()
 
 
+def plot_predictions(y_test, y_predict):
+    plt.scatter(y_test, y_predict)
+    plt.xlabel('Actual Power Consumption')
+    plt.ylabel('Predicted Power Consumption')
+    plt.title('Actual vs. Predicted Power Consumption')
+    plt.show()
+
+
+def plot_residuals(y_test, y_predict):
+    y_test = y_test.values.flatten()  # Flatten y_test to make it 1-dimensional
+    y_predict = y_predict.flatten()  # Flatten y_predict to make it 1-dimensional
+
+    residuals = y_test - y_predict
+    plt.scatter(y_test, residuals)
+    plt.axhline(y=0, color='r', linestyle='-')
+    plt.xlabel('Actual Power Consumption')
+    plt.ylabel('Residuals')
+    plt.title('Residual Plot')
+    plt.show()
+
+
 if __name__ == "__main__":
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
@@ -90,13 +111,16 @@ if __name__ == "__main__":
 
     x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
 
-    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-    #                        y_val.values.astype(float), 10)
     X_test = powerpredict_df.drop(columns=["power_consumption"])
     actual_values = encoded_values["power_consumption"]
 
     y_test = powerpredict_df["power_consumption"]
 
-    best_epochs()
+    # best_epochs()
 
-    # y_predict = leader_board_predict_fn(X_test)
+    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+                           y_val.values.astype(float), 8)
+    y_predict = leader_board_predict_fn(X_test)
+    #plot_predictions(y_test, y_predict)
+
+    #plot_residuals(y_test, y_predict)

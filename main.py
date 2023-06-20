@@ -3,9 +3,13 @@ import os
 import sklearn
 import numpy as np
 import torch
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
 
 from nn import neural_network
 
@@ -101,6 +105,53 @@ def plot_residuals(y_test, y_predict):
     plt.show()
 
 
+def train_evaluate_knn(x_train, y_train, x_val, y_val, x_test):
+    # Train the KNN model
+    knn_model = KNeighborsRegressor(n_neighbors=5)  # You can adjust the number of neighbors as needed
+    knn_model.fit(x_train, y_train)
+
+    # Evaluate the model on the validation set
+    val_predictions = knn_model.predict(x_val)
+    val_mae = mean_absolute_error(y_val, val_predictions)
+    print("Validation Mean Absolute Error (MAE) for KNN:", val_mae)
+
+    # Evaluate the model on the test set
+    test_predictions = knn_model.predict(x_test)
+
+    return test_predictions
+
+
+def train_evaluate_random_forest(x_train, y_train, x_val, y_val, x_test):
+    # Train the Random Forest model
+    random_forest_model = RandomForestRegressor(n_estimators=5, random_state=42)  # You can adjust the number of estimators as needed
+    random_forest_model.fit(x_train, y_train)
+
+    # Evaluate the model on the validation set
+    val_predictions = random_forest_model.predict(x_val)
+    val_mae = mean_absolute_error(y_val, val_predictions)
+    print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
+
+    # Evaluate the model on the test set
+    test_predictions = random_forest_model.predict(x_test)
+
+    return test_predictions
+
+def train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x_test):
+    # Train the decision tree model
+    decision_tree_model = DecisionTreeRegressor(random_state=42)  # You can adjust the random_state as needed
+    decision_tree_model.fit(x_train, y_train)
+
+    # Evaluate the model on the validation set
+    val_predictions = decision_tree_model.predict(x_val)
+    val_mae = mean_absolute_error(y_val, val_predictions)
+    print("Validation Mean Absolute Error (MAE) for Decision Tree:", val_mae)
+
+    # Evaluate the model on the test set
+    test_predictions = decision_tree_model.predict(x_test)
+
+    return test_predictions
+
+
 if __name__ == "__main__":
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
@@ -118,9 +169,13 @@ if __name__ == "__main__":
 
     # best_epochs()
 
-    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                           y_val.values.astype(float), 8)
-    y_predict = leader_board_predict_fn(X_test)
+    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                        y_val.values.astype(float), 8)
+   # y_predict = leader_board_predict_fn(X_test)
+    # make now a prediction with k nearest neighbors
+    knn_predictions = train_evaluate_knn(x_train, y_train, x_val, y_val, x)
+    random_forest_predictions = train_evaluate_random_forest(x_train, y_train, x_val, y_val, x)
+    decision_tree_predictions = train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x)
     #plot_predictions(y_test, y_predict)
 
     #plot_residuals(y_test, y_predict)

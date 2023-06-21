@@ -150,6 +150,21 @@ Erik's PC specifications are as follows: 13th Gen Intel Core i7-13700KF processo
 
 The function \texttt{get\_encodedV2()} is a modified version of encoding the categorical features in the dataset. It applies one-hot encoding to the categorical columns, fills missing values with column means, selects the top 40 correlated features (excluding the target feature), and adds back the target feature. However, this modification did not significantly affect the model's performance or feature selection.
 
+To resolve this kind of problem we decided to implement linear Regression and neural network because we have labelled data. Logistic regression is used for binary problems but this kind of problem isn't. Linear Regression was easy to implement when using scikit. Neural network is generally good for most problems. 
+As additional method we tried random forest, because we also wanted to try a non parametric method. Random forest improve accuray and avoid overfitting compared to decision tree. 
+
+The hyperparameters for the linear regression model are the scikit-learn default values. The hyperparameters for the neural network are as follows:
+\begin{itemize}
+  2 hidden layers with 64 neurons for the first layer and 32 neurons for the second layer
+  \item ReLU activation function for the hidden layers and linear activation function for the output layer
+  \item Adam optimizer with a learning rate of 0.001
+  \item Mean squared error loss function
+  \item 8 epochs was the best number of epochs for the neural network model
+  \item Batch size of 32
+\end{itemize}
+
+The hyperparameters for the random forest model are just the number of estimators, which is 5.
+
 \section{Results}
 \label{sec:results}
 

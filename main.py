@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
+import time
 
 from nn import neural_network
 
@@ -40,6 +41,9 @@ def get_encodedV2(powerpredict):
 
 def get_encoded(powerpredict):
     powerpredict = powerpredict.dropna()  # drop rows with missing values
+    # remove colums which start with _main and _description
+    #powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
+    #powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
 
     categorical_cols = powerpredict.select_dtypes(
         include=['object']).columns  # get columns where we have to encode the data
@@ -173,9 +177,17 @@ if __name__ == "__main__":
     #                        y_val.values.astype(float), 8)
    # y_predict = leader_board_predict_fn(X_test)
     # make now a prediction with k nearest neighbors
-    knn_predictions = train_evaluate_knn(x_train, y_train, x_val, y_val, x)
-    random_forest_predictions = train_evaluate_random_forest(x_train, y_train, x_val, y_val, x)
-    decision_tree_predictions = train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x)
+    # knn_predictions = train_evaluate_knn(x_train, y_train, x_val, y_val, x)
+    # random_forest_predictions = train_evaluate_random_forest(x_train, y_train, x_val, y_val, x)
+    # decision_tree_predictions = train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x)
+    # time neural network
+    start = time.time()
+    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+                            y_val.values.astype(float), 8)
+    end = time.time()
+    print("Time to train neural network: ", end - start)
+    y_predict = leader_board_predict_fn(X_test)
+
     #plot_predictions(y_test, y_predict)
 
     #plot_residuals(y_test, y_predict)

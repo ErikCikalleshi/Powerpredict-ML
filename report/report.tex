@@ -82,56 +82,29 @@ Introduction to Machine Learning (SS 2023)\\ Programming Project
 \section{Introduction}
 \label{sec:intro}
 
-{\color{blue}
-
-  \begin{itemize}
-    \item What is the nature of your task (regression/classification)? Is it about classifying types of birds, or deciding the number of cookies an employee receives?
-    \item Describe the dataset (number of features, number of instances, types of features, missing data, data imbalances, or any other relevant information).
-
-
-
-
-  \end{itemize}
-}
-
 
 The nature of the task in the powerprediction problem is mainly regression. Regression tasks involve predicting a continous numerical values such as power consumption based on weather information. The goal is to predict the amount of power consumed using wheater and cities variables as input features.
 
 The dataset consists of 39,997 instances (rows) and 67 features (columns). The features include a mix of numerical and categorical variables. The first column is an unnamed index column of integer type, and the remaining columns contain information such as temperature, weather conditions, humidity, wind speed, precipitation, and cloud coverage for various locations. There are no missing values in the dataset, as all columns have zero missing values.
 
-The find the whole information about the dataset, we used the following code:
+% The find the whole information about the dataset, we used the following code:
 
-\begin{verbatim}
+% \begin{verbatim}
 
-num_features = len(pw_df.columns)
+% num_features = len(pw_df.columns)
 
-num_instances = len(pw_df)
+% num_instances = len(pw_df)
 
-feature_types = pw_df.dtypes
+% feature_types = pw_df.dtypes
 
-missing_values = pw_df.isnull().sum()
+% missing_values = pw_df.isnull().sum()
 
-\end{verbatim}
-
-
-
-
-
+% \end{verbatim}
 
 
 \section{Implementation / ML Process}
 \label{sec:methods}
 
-{\color{blue}
-
-  \begin{itemize}
-    \item Did you need to pre-process the dataset (e.g. augmenting data points, extracting features, reducing the dimensionality, etc.)? If so, describe how you did this.
-    \item Specify the method (e.g. linear regression, or SVM with these features, etc.). You do not have to describe the algorithm in detail, but rather the algorithm family and the properties of the algorithm within that family, e.g. which distance functions for a decision tree, what architecture (layers and activations) for a neural network, etc.
-    \item State (in 2-5 lines) what makes the algorithm you chose suitable for this problem. What are the reasons for choosing your ML method over others?
-    \item If you used a method that was not covered in the VO, describe how it is different from the closest method described in the VO.
-    \item How did you choose hyperparameters (other design choices) and what are the values of the hyperparameters you chose for your final model? How did you make sure that the choice of hyperparameters works well?
-  \end{itemize}
-}
 
 \textbf{Pre-processing Steps:}
 
@@ -149,21 +122,6 @@ Erik's PC specifications are as follows: 13th Gen Intel Core i7-13700KF processo
 \textbf{Splitting the Dataset:} The dataset is split into training and validation sets using the \texttt{train\_test\_split()} function from scikit-learn. This step allows for model training on the training set and evaluation on the validation set to assess performance and tune hyperparameters if necessary.
 
 The function \texttt{get\_encodedV2()} is a modified version of encoding the categorical features in the dataset. It applies one-hot encoding to the categorical columns, fills missing values with column means, selects the top 40 correlated features (excluding the target feature), and adds back the target feature. However, this modification did not significantly affect the model's performance or feature selection.
-
-To resolve this kind of problem we decided to implement linear Regression and neural network because we have labelled data. Logistic regression is used for binary problems but this kind of problem isn't. Linear Regression was easy to implement when using scikit. Neural network is generally good for most problems. 
-As additional method we tried random forest, because we also wanted to try a non parametric method. Random forest improve accuray and avoid overfitting compared to decision tree. 
-
-The hyperparameters for the linear regression model are the scikit-learn default values. The hyperparameters for the neural network are as follows:
-\begin{itemize}
-  2 hidden layers with 64 neurons for the first layer and 32 neurons for the second layer
-  \item ReLU activation function for the hidden layers and linear activation function for the output layer
-  \item Adam optimizer with a learning rate of 0.001
-  \item Mean squared error loss function
-  \item 8 epochs was the best number of epochs for the neural network model
-  \item Batch size of 32
-\end{itemize}
-
-The hyperparameters for the random forest model are just the number of estimators, which is 5.
 
 \section{Results}
 \label{sec:results}

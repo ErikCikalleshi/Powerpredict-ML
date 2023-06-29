@@ -42,8 +42,8 @@ def get_encodedV2(powerpredict):
 def get_encoded(powerpredict):
     powerpredict = powerpredict.dropna()  # drop rows with missing values
     # remove colums which start with _main and _description
-    #powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
-    #powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
+    # powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
+    # powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
 
     categorical_cols = powerpredict.select_dtypes(
         include=['object']).columns  # get columns where we have to encode the data
@@ -88,6 +88,18 @@ def best_epochs():
     plt.show()
 
 
+def train_evaluate_random_forest(x_train, y_train):
+    # Train the Random Forest model
+    random_forest_model = RandomForestRegressor(n_estimators=10,
+                                                random_state=42)  # You can adjust the number of estimators as needed
+    random_forest_model.fit(x_train, y_train)
+
+    # Evaluate the model on the validation set
+    val_predictions = random_forest_model.predict(x_val)
+    val_mae = mean_absolute_error(y_val, val_predictions)
+    print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
+
+
 def plot_predictions(y_test, y_predict):
     plt.scatter(y_test, y_predict)
     plt.xlabel('Actual Power Consumption')
@@ -109,53 +121,6 @@ def plot_residuals(y_test, y_predict):
     plt.show()
 
 
-def train_evaluate_knn(x_train, y_train, x_val, y_val, x_test):
-    # Train the KNN model
-    knn_model = KNeighborsRegressor(n_neighbors=5)  # You can adjust the number of neighbors as needed
-    knn_model.fit(x_train, y_train)
-
-    # Evaluate the model on the validation set
-    val_predictions = knn_model.predict(x_val)
-    val_mae = mean_absolute_error(y_val, val_predictions)
-    print("Validation Mean Absolute Error (MAE) for KNN:", val_mae)
-
-    # Evaluate the model on the test set
-    test_predictions = knn_model.predict(x_test)
-
-    return test_predictions
-
-
-def train_evaluate_random_forest(x_train, y_train, x_val, y_val, x_test):
-    # Train the Random Forest model
-    random_forest_model = RandomForestRegressor(n_estimators=5, random_state=42)  # You can adjust the number of estimators as needed
-    random_forest_model.fit(x_train, y_train)
-
-    # Evaluate the model on the validation set
-    val_predictions = random_forest_model.predict(x_val)
-    val_mae = mean_absolute_error(y_val, val_predictions)
-    print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
-
-    # Evaluate the model on the test set
-    test_predictions = random_forest_model.predict(x_test)
-
-    return test_predictions
-
-def train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x_test):
-    # Train the decision tree model
-    decision_tree_model = DecisionTreeRegressor(random_state=42)  # You can adjust the random_state as needed
-    decision_tree_model.fit(x_train, y_train)
-
-    # Evaluate the model on the validation set
-    val_predictions = decision_tree_model.predict(x_val)
-    val_mae = mean_absolute_error(y_val, val_predictions)
-    print("Validation Mean Absolute Error (MAE) for Decision Tree:", val_mae)
-
-    # Evaluate the model on the test set
-    test_predictions = decision_tree_model.predict(x_test)
-
-    return test_predictions
-
-
 if __name__ == "__main__":
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
@@ -173,21 +138,19 @@ if __name__ == "__main__":
 
     # best_epochs()
 
-    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-    #                        y_val.values.astype(float), 8)
-   # y_predict = leader_board_predict_fn(X_test)
-    # make now a prediction with k nearest neighbors
-    # knn_predictions = train_evaluate_knn(x_train, y_train, x_val, y_val, x)
-    # random_forest_predictions = train_evaluate_random_forest(x_train, y_train, x_val, y_val, x)
-    # decision_tree_predictions = train_evaluate_decision_tree(x_train, y_train, x_val, y_val, x)
-    # time neural network
-    start = time.time()
     model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                            y_val.values.astype(float), 8)
-    end = time.time()
-    print("Time to train neural network: ", end - start)
+                           y_val.values.astype(float), 8)
     y_predict = leader_board_predict_fn(X_test)
 
-    #plot_predictions(y_test, y_predict)
+    plot_predictions(y_test, y_predict)
 
-    #plot_residuals(y_test, y_predict)
+    plot_residuals(y_test, y_predict)
+
+    # random_forest_predictions = train_evaluate_random_forest(x, y, x_val, y_val, x)
+    ################################################## Testing purposes
+    # time neural network
+    # start = time.time()
+    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                        y_val.values.astype(float), 8)
+    # end = time.time()
+    # print("Time to train neural network: ", end - start)

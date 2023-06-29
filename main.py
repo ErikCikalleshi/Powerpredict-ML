@@ -55,15 +55,19 @@ def get_encoded(powerpredict):
 
 
 def leader_board_predict_fn(values):
-    global model
-    values_encoded = get_encoded(values)
-    # values_encoded = values_encoded.reindex(columns=x_train.columns, fill_value=0)
+    x_values_encoded = get_encoded(values)
+    x_values_encoded = x_values_encoded.reindex(columns=x_train.columns, fill_value=0)
 
     # Convert values_encoded to float type
-    values_encoded = values_encoded.astype(float)
+    x_values_encoded = x_values_encoded.astype(float)
 
-    values_tensor = torch.Tensor(values_encoded.values)
-    predictions = model(values_tensor).detach().numpy()
+    values_tensor = torch.Tensor(x_values_encoded.values)
+    # Uncomment for Neural Network prediction
+    # predictions = model(values_tensor).detach().numpy()
+    # Uncomment for Random Forest prediction
+    predictions = model.predict(x_values_encoded)
+    # Uncomment for Random Forest prediction
+    # predictions = lr_model.predict(x_values_encoded)
 
     return predictions
 
@@ -98,6 +102,8 @@ def train_evaluate_random_forest(x_train, y_train):
     val_predictions = random_forest_model.predict(x_val)
     val_mae = mean_absolute_error(y_val, val_predictions)
     print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
+
+    return random_forest_model
 
 
 def plot_predictions(y_test, y_predict):
@@ -140,13 +146,14 @@ if __name__ == "__main__":
 
     model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
                            y_val.values.astype(float), 8)
+    model = train_evaluate_random_forest(x, y)
     y_predict = leader_board_predict_fn(X_test)
 
     plot_predictions(y_test, y_predict)
 
     plot_residuals(y_test, y_predict)
 
-    # random_forest_predictions = train_evaluate_random_forest(x, y, x_val, y_val, x)
+
     ################################################## Testing purposes
     # time neural network
     # start = time.time()

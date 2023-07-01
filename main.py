@@ -6,13 +6,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.tree import DecisionTreeRegressor
-import time
 from sklearn import tree
 
 from nn import neural_network
@@ -66,11 +63,9 @@ def leader_board_predict_fn(values):
 
     values_tensor = torch.Tensor(x_values_encoded.values)
     # Uncomment for Neural Network prediction
-    predictions = model(values_tensor).detach().numpy()
+    # predictions = model(values_tensor).detach().numpy()
     # Uncomment for Random Forest prediction
-    # predictions = model.predict(x_values_encoded)
-    # Uncomment for Random Forest prediction
-#    predictions = model.predict(x_values_encoded)
+    predictions = model.predict(x_values_encoded)
 
     return predictions
 
@@ -117,16 +112,19 @@ def best_estimators():
     plt.show()
 
 
+def train_evaluate_linear_regression(x, y):
+    # Train the Random Forest model
+    lr_model = LinearRegression()
+    lr_model.fit(x, y)
+
+    return lr_model
+
+
 def train_evaluate_random_forest(x_train, y_train, n_estimators):
     # Train the Random Forest model
     random_forest_model = RandomForestRegressor(n_estimators=n_estimators,
                                                 random_state=42)  # You can adjust the number of estimators as needed
-    function = random_forest_model.fit(x_train, y_train)
-
-    # Evaluate the model on the validation set
-    # val_predictions = random_forest_model.predict(x_val)
-    # val_mae = mean_absolute_error(y_val, val_predictions)
-    # print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
+    random_forest_model.fit(x_train, y_train)
 
     return random_forest_model
 
@@ -148,19 +146,8 @@ def plot_residuals(y_test, y_predict):
     plt.axhline(y=0, color='r', linestyle='-')
     plt.xlabel('Actual Power Consumption')
     plt.ylabel('Residuals')
-    plt.title('Residual Plot')
+    plt.title('Residual Plot Neural Network')
     plt.show()
-
-
-def train_evaluate_linear_regression(x, y):
-    # Train the Random Forest model
-    lr_model = LinearRegression()
-    lr_model.fit(x, y)
-
-    # Evaluate the model on the validation set
-    val_predictions = lr_model.predict(x_val)
-
-    return lr_model
 
 
 def plot_decision_tree(random_forest_model):
@@ -170,6 +157,14 @@ def plot_decision_tree(random_forest_model):
     # Plot the decision tree
     plt.figure(figsize=(10, 10))
     tree.plot_tree(decision_tree, filled=True)
+    plt.show()
+
+
+def plot_comparison(models, mae_scores):
+    plt.bar(models, mae_scores)
+    plt.xlabel('Models')
+    plt.ylabel('Mean Absolute Error (MAE)')
+    plt.title('Model Comparison based on MAE')
     plt.show()
 
 
@@ -192,9 +187,9 @@ if __name__ == "__main__":
 
     # best_epochs()
 
-    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                            y_val.values.astype(float), 50)
-    #model = train_evaluate_linear_regression(x_train, y_train)
+    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                         y_val.values.astype(float), 20)
+    model = train_evaluate_linear_regression(x_train, y_train)
 
     y_predict = leader_board_predict_fn(x_val)
 
@@ -205,17 +200,13 @@ if __name__ == "__main__":
     # plot_decision_tree(model)
 
     models = ['Linear Regression', 'Random Forest', 'Neural Network']
-    mae_scores = [3094.9474070944225, 846.7883007892258,
-                  3634.9795218528106]  # Replace with actual MAE scores for each model
+    mae_scores = [3094.9474070944225, 1681.2182666666665,
+                  3530.0693807373045]  # Replace with actual MAE scores for each model
 
     # Plot the model comparison
-    # plt.bar(models, mae_scores)
-    # plt.xlabel('Models')
-    # plt.ylabel('Mean Absolute Error (MAE)')
-    # plt.title('Model Comparison based on MAE')
-    # plt.show()
+    plot_comparison(models, mae_scores)
 
-    # plot_residuals(y_test, y_predict)
+    # plot_residual(y_test, y_predict)
 
     ################################################## Testing purposes
     # time neural network

@@ -1,9 +1,9 @@
 import numpy as np
-from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
+import matplotlib.pyplot as plt
 
 
 def neural_network(x_train, y_train, x_val, y_val, num_epochs):
@@ -30,7 +30,11 @@ def neural_network(x_train, y_train, x_val, y_val, num_epochs):
 
     # Define the loss function and optimizer
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+    # Lists to store losses
+    train_losses = []
+    val_losses = []
 
     # Train the model
     for epoch in range(num_epochs):
@@ -54,9 +58,18 @@ def neural_network(x_train, y_train, x_val, y_val, num_epochs):
                 val_loss += criterion(outputs, targets).item()
 
         val_loss /= len(val_loader)
+        train_losses.append(loss.item())
+        val_losses.append(val_loss)
         print(f"Epoch {epoch+1}: Training Loss={loss.item():.4f}, Validation Loss={val_loss:.4f}")
 
+    # Plotting
+    epochs = range(1, num_epochs + 1)
+    plt.plot(epochs, train_losses, label='Training Loss')
+    plt.plot(epochs, val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.show()
+
     return model
-
-
-

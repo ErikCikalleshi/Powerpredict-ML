@@ -66,11 +66,11 @@ def leader_board_predict_fn(values):
 
     values_tensor = torch.Tensor(x_values_encoded.values)
     # Uncomment for Neural Network prediction
-    #predictions = model(values_tensor).detach().numpy()
+    predictions = model(values_tensor).detach().numpy()
     # Uncomment for Random Forest prediction
     # predictions = model.predict(x_values_encoded)
     # Uncomment for Random Forest prediction
-    predictions = model.predict(x_values_encoded)
+#    predictions = model.predict(x_values_encoded)
 
     return predictions
 
@@ -82,7 +82,7 @@ def best_epochs():
     for epoch in range(1, num_epochs):
         model = neural_network(x_train.values.astype(float), y_train.values.astype(float),
                                x_val.values.astype(float), y_val.values.astype(float), epoch)
-        y_predict = leader_board_predict_fn(X_test)
+        y_predict = leader_board_predict_fn(y_val)
         epoch_mae = mean_absolute_error(y_test, y_predict)
         print(epoch, "Mean Absolute Error (MAE):", epoch_mae)
         epoch_losses.append(epoch_mae)
@@ -160,8 +160,8 @@ def train_evaluate_linear_regression(x, y):
     # Evaluate the model on the validation set
     val_predictions = lr_model.predict(x_val)
 
-
     return lr_model
+
 
 def plot_decision_tree(random_forest_model):
     # Extract a single decision tree from the Random Forest model
@@ -188,34 +188,32 @@ if __name__ == "__main__":
 
     y_test = powerpredict_df["power_consumption"]
 
-    #best_estimators()
+    # best_estimators()
 
     # best_epochs()
 
-    #model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-    #                        y_val.values.astype(float), 8)
-    model = train_evaluate_linear_regression(x_train, y_train)
+    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+                            y_val.values.astype(float), 50)
+    #model = train_evaluate_linear_regression(x_train, y_train)
 
-    y_predict = leader_board_predict_fn(X_test)
+    y_predict = leader_board_predict_fn(x_val)
 
     # print mae
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_test, y_predict))
-
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
 
     # make a random forest plot
-    #plot_decision_tree(model)
-
-
+    # plot_decision_tree(model)
 
     models = ['Linear Regression', 'Random Forest', 'Neural Network']
-    mae_scores = [3094.9474070944225, 846.7883007892258, 3634.9795218528106]  # Replace with actual MAE scores for each model
+    mae_scores = [3094.9474070944225, 846.7883007892258,
+                  3634.9795218528106]  # Replace with actual MAE scores for each model
 
     # Plot the model comparison
-    plt.bar(models, mae_scores)
-    plt.xlabel('Models')
-    plt.ylabel('Mean Absolute Error (MAE)')
-    plt.title('Model Comparison based on MAE')
-    plt.show()
+    # plt.bar(models, mae_scores)
+    # plt.xlabel('Models')
+    # plt.ylabel('Mean Absolute Error (MAE)')
+    # plt.title('Model Comparison based on MAE')
+    # plt.show()
 
     # plot_residuals(y_test, y_predict)
 

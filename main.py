@@ -2,8 +2,10 @@ import pandas as pd
 import os
 import sklearn
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 import torch
-from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -11,6 +13,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 import time
+from sklearn import tree
 
 from nn import neural_network
 
@@ -63,20 +66,20 @@ def leader_board_predict_fn(values):
 
     values_tensor = torch.Tensor(x_values_encoded.values)
     # Uncomment for Neural Network prediction
-    # predictions = model(values_tensor).detach().numpy()
+    #predictions = model(values_tensor).detach().numpy()
+    # Uncomment for Random Forest prediction
+    # predictions = model.predict(x_values_encoded)
     # Uncomment for Random Forest prediction
     predictions = model.predict(x_values_encoded)
-    # Uncomment for Random Forest prediction
-    # predictions = lr_model.predict(x_values_encoded)
 
     return predictions
 
 
 def best_epochs():
     global model
-    num_epochs = 10
+    num_epochs = 20
     epoch_losses = []
-    for epoch in range(6, num_epochs + 1):
+    for epoch in range(1, num_epochs):
         model = neural_network(x_train.values.astype(float), y_train.values.astype(float),
                                x_val.values.astype(float), y_val.values.astype(float), epoch)
         y_predict = leader_board_predict_fn(X_test)
@@ -85,23 +88,45 @@ def best_epochs():
         epoch_losses.append(epoch_mae)
 
     # Create a chart
-    plt.plot(range(6, num_epochs + 1), epoch_losses, marker='o')
+    plt.plot(range(1, num_epochs), epoch_losses, marker='o')
     plt.xlabel('Epoch')
     plt.ylabel('Mean Absolute Error (MAE)')
     plt.title('Model Performance across Epochs')
     plt.show()
 
 
-def train_evaluate_random_forest(x_train, y_train):
+def best_estimators():
+    num_estimators = [2, 4, 8, 10, 15, 20, 40, 50]  # Adjust the list of estimators as needed
+    mae_scores = []
+
+    for n_estimators in num_estimators:
+        # Train the Random Forest model
+        random_forest_model = train_evaluate_random_forest(x_train, y_train, n_estimators)
+
+        # Evaluate the model on the validation set
+        val_predictions = random_forest_model.predict(x_val)
+        print("Validation Mean Absolute Error (MAE) for Random Forest:", mean_absolute_error(y_val, val_predictions))
+        val_mae = mean_absolute_error(y_val, val_predictions)
+        mae_scores.append(val_mae)
+
+    # Create a chart
+    plt.plot(num_estimators, mae_scores, marker='o')
+    plt.xlabel('Number of Estimators')
+    plt.ylabel('Mean Absolute Error (MAE)')
+    plt.title('Model Performance across Different Number of Estimators')
+    plt.show()
+
+
+def train_evaluate_random_forest(x_train, y_train, n_estimators):
     # Train the Random Forest model
-    random_forest_model = RandomForestRegressor(n_estimators=10,
+    random_forest_model = RandomForestRegressor(n_estimators=n_estimators,
                                                 random_state=42)  # You can adjust the number of estimators as needed
-    random_forest_model.fit(x_train, y_train)
+    function = random_forest_model.fit(x_train, y_train)
 
     # Evaluate the model on the validation set
-    val_predictions = random_forest_model.predict(x_val)
-    val_mae = mean_absolute_error(y_val, val_predictions)
-    print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
+    # val_predictions = random_forest_model.predict(x_val)
+    # val_mae = mean_absolute_error(y_val, val_predictions)
+    # print("Validation Mean Absolute Error (MAE) for Random Forest:", val_mae)
 
     return random_forest_model
 
@@ -127,6 +152,27 @@ def plot_residuals(y_test, y_predict):
     plt.show()
 
 
+def train_evaluate_linear_regression(x, y):
+    # Train the Random Forest model
+    lr_model = LinearRegression()
+    lr_model.fit(x, y)
+
+    # Evaluate the model on the validation set
+    val_predictions = lr_model.predict(x_val)
+
+
+    return lr_model
+
+def plot_decision_tree(random_forest_model):
+    # Extract a single decision tree from the Random Forest model
+    decision_tree = random_forest_model.estimators_[0]
+
+    # Plot the decision tree
+    plt.figure(figsize=(10, 10))
+    tree.plot_tree(decision_tree, filled=True)
+    plt.show()
+
+
 if __name__ == "__main__":
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
@@ -142,17 +188,36 @@ if __name__ == "__main__":
 
     y_test = powerpredict_df["power_consumption"]
 
+    #best_estimators()
+
     # best_epochs()
 
-    model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                           y_val.values.astype(float), 8)
-    model = train_evaluate_random_forest(x, y)
+    #model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                        y_val.values.astype(float), 8)
+    model = train_evaluate_linear_regression(x_train, y_train)
+
     y_predict = leader_board_predict_fn(X_test)
 
-    plot_predictions(y_test, y_predict)
+    # print mae
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_test, y_predict))
 
-    plot_residuals(y_test, y_predict)
 
+    # make a random forest plot
+    #plot_decision_tree(model)
+
+
+
+    models = ['Linear Regression', 'Random Forest', 'Neural Network']
+    mae_scores = [3094.9474070944225, 846.7883007892258, 3634.9795218528106]  # Replace with actual MAE scores for each model
+
+    # Plot the model comparison
+    plt.bar(models, mae_scores)
+    plt.xlabel('Models')
+    plt.ylabel('Mean Absolute Error (MAE)')
+    plt.title('Model Comparison based on MAE')
+    plt.show()
+
+    # plot_residuals(y_test, y_predict)
 
     ################################################## Testing purposes
     # time neural network

@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
 
 
-def neural_network(x_train, y_train, x_val, y_val, num_epochs):
+def neural_network(x_train, y_train, x_val, y_val, num_epochs, best_dropout_rate, best_weight_decay):
     # Create a PyTorch dataset for training data
     train_dataset = TensorDataset(torch.Tensor(x_train), torch.Tensor(y_train))
 
@@ -23,14 +23,16 @@ def neural_network(x_train, y_train, x_val, y_val, num_epochs):
     model = nn.Sequential(
         nn.Linear(x_train.shape[1], 64),
         nn.ReLU(),
+        nn.Dropout(best_dropout_rate),
         nn.Linear(64, 32),
         nn.ReLU(),
+        nn.Dropout(best_dropout_rate),
         nn.Linear(32, 1)
     )
 
     # Define the loss function and optimizer
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=best_weight_decay)
 
     # Lists to store losses
     train_losses = []
@@ -60,16 +62,16 @@ def neural_network(x_train, y_train, x_val, y_val, num_epochs):
         val_loss /= len(val_loader)
         train_losses.append(loss.item())
         val_losses.append(val_loss)
-        print(f"Epoch {epoch+1}: Training Loss={loss.item():.4f}, Validation Loss={val_loss:.4f}")
+        #print(f"Epoch {epoch+1}: Training Loss={loss.item():.4f}, Validation Loss={val_loss:.4f}")
 
     # Plotting
     epochs = range(1, num_epochs + 1)
-    plt.plot(epochs, train_losses, label='Training Loss')
-    plt.plot(epochs, val_losses, label='Validation Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.title('Training and Validation Loss')
-    plt.legend()
-    plt.show()
+    # plt.plot(epochs, train_losses, label='Training Loss')
+    # plt.plot(epochs, val_losses, label='Validation Loss')
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Loss')
+    # plt.title('Training and Validation Loss')
+    # plt.legend()
+    # plt.show()
 
     return model

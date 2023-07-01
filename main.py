@@ -1,21 +1,18 @@
-import pandas as pd
 import os
-import sklearn
+import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+import pandas as pd
 import torch
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
 from sklearn import tree
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
 
 from nn import neural_network
 
 # init model globally
-model = None
+model = [None, None, None]
 
 
 def get_encodedV2(powerpredict):
@@ -42,8 +39,8 @@ def get_encodedV2(powerpredict):
 def get_encoded(powerpredict):
     powerpredict = powerpredict.dropna()  # drop rows with missing values
     # remove colums which start with _main and _description
-    # powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
-    # powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
+    powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
+    powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
 
     categorical_cols = powerpredict.select_dtypes(
         include=['object']).columns  # get columns where we have to encode the data
@@ -54,7 +51,7 @@ def get_encoded(powerpredict):
     return encoded_df
 
 
-def leader_board_predict_fn(values):
+def leader_board_predict_fn(values, model_type):
     x_values_encoded = get_encoded(values)
     x_values_encoded = x_values_encoded.reindex(columns=x_train.columns, fill_value=0)
 
@@ -62,10 +59,15 @@ def leader_board_predict_fn(values):
     x_values_encoded = x_values_encoded.astype(float)
 
     values_tensor = torch.Tensor(x_values_encoded.values)
-    # Uncomment for Neural Network prediction
-    # predictions = model(values_tensor).detach().numpy()
-    # Uncomment for Random Forest prediction
-    predictions = model.predict(x_values_encoded)
+
+    if model_type == 'Neural Network':
+        predictions = model[2](values_tensor).detach().numpy()
+    elif model_type == 'Random Forest':
+        predictions = model[1].predict(x_values_encoded)
+    elif model_type == 'Linear Regression':
+        predictions = model[0].predict(x_values_encoded)
+    else:
+        raise ValueError("Invalid model type specified.")
 
     return predictions
 
@@ -160,12 +162,44 @@ def plot_decision_tree(random_forest_model):
     plt.show()
 
 
-def plot_comparison(models, mae_scores):
+def plot_comparison():
+    models = ['Linear Regression', 'Random Forest', 'Neural Network']
+    mae_scores = [3094.9474070944225, 1681.2182666666665,
+                  3530.0693807373045]  # Replace with actual MAE scores for each model
     plt.bar(models, mae_scores)
     plt.xlabel('Models')
     plt.ylabel('Mean Absolute Error (MAE)')
     plt.title('Model Comparison based on MAE')
     plt.show()
+
+def tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs):
+    dropout_rates = [0.2, 0.4, 0.6]  # Adjust the dropout rates to be tested
+    weight_decays = [0.0001, 0.001, 0.01]  # Adjust the weight decays to be tested
+
+    best_model = None
+    best_loss = float('inf')
+    best_dropout_rate = None
+    best_weight_decay = None
+
+    for dropout_rate in dropout_rates:
+        for weight_decay in weight_decays:
+            # Train the model with the current hyperparameters
+            model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+                            y_val.values.astype(float), num_epochs, dropout_rate, weight_decay)
+
+            # Evaluate the model on the validation set
+            val_predictions = leader_board_predict_fn(x_val, 'Neural Network')
+            val_loss = mean_absolute_error(y_val, val_predictions)
+
+            # Check if the current model performs better than the previous best model
+            if val_loss < best_loss:
+                best_model = model
+                best_loss = val_loss
+                best_dropout_rate = dropout_rate
+                best_weight_decay = weight_decay
+
+    return best_model, best_dropout_rate, best_weight_decay
+
 
 
 if __name__ == "__main__":
@@ -177,6 +211,14 @@ if __name__ == "__main__":
     y = encoded_values["power_consumption"]
 
     x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
+    # num_epochs = 10
+    # best_model, best_dropout_rate, best_weight_decay = tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs)
+    # print("Best Dropout Rate:", best_dropout_rate)
+    # print("Best Weight Decay:", best_weight_decay)
+
+    # Train the final model with the best hyperparameters
+    # final_model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+    #                         y_val.values.astype(float), num_epochs, best_dropout_rate, best_weight_decay)
 
     X_test = powerpredict_df.drop(columns=["power_consumption"])
     actual_values = encoded_values["power_consumption"]
@@ -189,22 +231,24 @@ if __name__ == "__main__":
 
     # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
     #                         y_val.values.astype(float), 20)
-    model = train_evaluate_linear_regression(x_train, y_train)
+    model[0] = train_evaluate_linear_regression(x_train, y_train)
+    y_predict = leader_board_predict_fn(x_val, 'Linear Regression')
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
 
-    y_predict = leader_board_predict_fn(x_val)
+    model[1] = train_evaluate_random_forest(x_train, y_train, 10)
+    y_predict = leader_board_predict_fn(x_val, 'Random Forest')
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
 
-    # print mae
+    model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
+                                y_val.values.astype(float), 10, 0.2, 0.001)
+    y_predict = leader_board_predict_fn(x_val, 'Neural Network')
     print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
 
     # make a random forest plot
     # plot_decision_tree(model)
 
-    models = ['Linear Regression', 'Random Forest', 'Neural Network']
-    mae_scores = [3094.9474070944225, 1681.2182666666665,
-                  3530.0693807373045]  # Replace with actual MAE scores for each model
-
     # Plot the model comparison
-    plot_comparison(models, mae_scores)
+    # plot_comparison()
 
     # plot_residual(y_test, y_predict)
 

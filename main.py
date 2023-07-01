@@ -139,16 +139,21 @@ def plot_predictions(y_test, y_predict):
     plt.show()
 
 
-def plot_residuals(y_test, y_predict):
+def plot_residuals(y_test, y_predict_rf, y_predict_nn):
     y_test = y_test.values.flatten()  # Flatten y_test to make it 1-dimensional
-    y_predict = y_predict.flatten()  # Flatten y_predict to make it 1-dimensional
+    residuals_rf = y_test - y_predict_rf.flatten()  # Calculate residuals for Random Forest model
+    residuals_nn = y_test - y_predict_nn.flatten()  # Calculate residuals for Neural Network model
 
-    residuals = y_test - y_predict
-    plt.scatter(y_test, residuals)
+    noise_rf = np.random.normal(0, 0.1, len(residuals_rf))  # Generate random noise for Random Forest
+    noise_nn = np.random.normal(0, 0.1, len(residuals_nn))  # Generate random noise for Neural Network
+
+    plt.scatter(y_test, residuals_rf + noise_rf, label='Random Forest')
+    plt.scatter(y_test, residuals_nn + noise_nn, label='Neural Network')
     plt.axhline(y=0, color='r', linestyle='-')
     plt.xlabel('Actual Power Consumption')
     plt.ylabel('Residuals')
-    plt.title('Residual Plot Neural Network')
+    plt.title('Residuals on Neural Network and Random Forest')
+    plt.legend()
     plt.show()
 
 
@@ -225,7 +230,7 @@ if __name__ == "__main__":
 
     y_test = powerpredict_df["power_consumption"]
 
-    # best_estimators()
+    best_estimators()
 
     # best_epochs()
 
@@ -235,14 +240,16 @@ if __name__ == "__main__":
     y_predict = leader_board_predict_fn(x_val, 'Linear Regression')
     print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
 
-    model[1] = train_evaluate_random_forest(x_train, y_train, 10)
-    y_predict = leader_board_predict_fn(x_val, 'Random Forest')
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
+    model[1] = train_evaluate_random_forest(x_train, y_train, 30)
+    y_predict_rf = leader_board_predict_fn(x_val, 'Random Forest')
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict_rf))
 
     model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
                                 y_val.values.astype(float), 10, 0.2, 0.001)
-    y_predict = leader_board_predict_fn(x_val, 'Neural Network')
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
+    y_predict_nn = leader_board_predict_fn(x_val, 'Neural Network')
+    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict_nn))
+
+    plot_residuals(y_val, y_predict_rf, y_predict_nn)
 
     # make a random forest plot
     # plot_decision_tree(model)

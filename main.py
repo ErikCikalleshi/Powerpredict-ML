@@ -16,6 +16,7 @@ from nn import neural_network
 # init model globally
 model = [None, None, None]
 
+
 def load_model(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -23,6 +24,7 @@ def load_model(file_path):
         return loaded_model
     else:
         return None
+
 
 def save_model(model, file_path):
     with open(file_path, "wb") as f:
@@ -51,7 +53,7 @@ def get_encodedV2(powerpredict):
 
 
 def get_encoded(powerpredict):
-    powerpredict = powerpredict.dropna()  # drop rows with missing values
+    powerpredict = powerpredict.dropna()
     # remove colums which start with _main and _description
     powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_main')]
     powerpredict = powerpredict.loc[:, ~powerpredict.columns.str.startswith('_description')]
@@ -191,6 +193,7 @@ def plot_comparison():
     plt.title('Model Comparison based on MAE')
     plt.show()
 
+
 def tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs):
     dropout_rates = [0.2, 0.4, 0.6]  # Adjust the dropout rates to be tested
     weight_decays = [0.0001, 0.001, 0.01]  # Adjust the weight decays to be tested
@@ -203,8 +206,9 @@ def tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs):
     for dropout_rate in dropout_rates:
         for weight_decay in weight_decays:
             # Train the model with the current hyperparameters
-            model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                            y_val.values.astype(float), num_epochs, dropout_rate, weight_decay)
+            model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float),
+                                      x_val.values.astype(float),
+                                      y_val.values.astype(float), num_epochs, dropout_rate, weight_decay)
 
             # Evaluate the model on the validation set
             val_predictions = leader_board_predict_fn(x_val, 'Neural Network')
@@ -220,7 +224,6 @@ def tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs):
     return best_model, best_dropout_rate, best_weight_decay
 
 
-
 if __name__ == "__main__":
     DATASET_PATH = "."
     powerpredict_df = pd.read_csv(os.path.join(DATASET_PATH, "powerpredict.csv"))
@@ -230,6 +233,7 @@ if __name__ == "__main__":
     y = encoded_values["power_consumption"]
 
     x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
+    # For the HYPERPARAMETER TUNING
     # num_epochs = 10
     # best_model, best_dropout_rate, best_weight_decay = tune_hyperparameters(x_train, y_train, x_val, y_val, num_epochs)
     # print("Best Dropout Rate:", best_dropout_rate)

@@ -1,4 +1,6 @@
 import os
+import pickle
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,6 +15,18 @@ from nn import neural_network
 
 # init model globally
 model = [None, None, None]
+
+def load_model(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            loaded_model = pickle.load(f)
+        return loaded_model
+    else:
+        return None
+
+def save_model(model, file_path):
+    with open(file_path, "wb") as f:
+        pickle.dump(model, f)
 
 
 def get_encodedV2(powerpredict):
@@ -230,26 +244,41 @@ if __name__ == "__main__":
 
     y_test = powerpredict_df["power_consumption"]
 
-    best_estimators()
+    # best_estimators()
 
     # best_epochs()
 
-    # model = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-    #                         y_val.values.astype(float), 20)
-    model[0] = train_evaluate_linear_regression(x_train, y_train)
-    y_predict = leader_board_predict_fn(x_val, 'Linear Regression')
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict))
+    linear_regression_model_path = "linear_regression_model.pkl"
+    model[0] = load_model(linear_regression_model_path)
+    if model[0] is None:
+        model[0] = train_evaluate_linear_regression(x_train, y_train)
+        save_model(model[0], linear_regression_model_path)
 
-    model[1] = train_evaluate_random_forest(x_train, y_train, 30)
+    # Load or create the Random Forest model
+    random_forest_model_path = "random_forest_model.pkl"
+    model[1] = load_model(random_forest_model_path)
+    if model[1] is None:
+        model[1] = train_evaluate_random_forest(x_train, y_train, 8)
+        save_model(model[1], random_forest_model_path)
+
+    # Load or create the Neural Network model
+    neural_network_model_path = "neural_network_model.pkl"
+    model[2] = load_model(neural_network_model_path)
+    if model[2] is None:
+        model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float),
+                                  x_val.values.astype(float),
+                                  y_val.values.astype(float), 10, 0.2, 0.001)
+        save_model(model[2], neural_network_model_path)
+
+    y_predict_lr = leader_board_predict_fn(x_val, 'Linear Regression')
     y_predict_rf = leader_board_predict_fn(x_val, 'Random Forest')
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict_rf))
-
-    model[2] = neural_network(x_train.values.astype(float), y_train.values.astype(float), x_val.values.astype(float),
-                                y_val.values.astype(float), 10, 0.2, 0.001)
     y_predict_nn = leader_board_predict_fn(x_val, 'Neural Network')
-    print("Mean Absolute Error (MAE):", mean_absolute_error(y_val, y_predict_nn))
 
-    plot_residuals(y_val, y_predict_rf, y_predict_nn)
+    print("Linear Regression MAE: ", mean_absolute_error(y_val, y_predict_lr))
+    print("Random Forest MAE: ", mean_absolute_error(y_val, y_predict_rf))
+    print("Neural Network MAE: ", mean_absolute_error(y_val, y_predict_nn))
+
+    # plot_residuals(y_val, y_predict_rf, y_predict_nn)
 
     # make a random forest plot
     # plot_decision_tree(model)

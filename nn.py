@@ -7,16 +7,12 @@ import matplotlib.pyplot as plt
 
 
 def neural_network(x_train, y_train, x_val, y_val, num_epochs, best_dropout_rate, best_weight_decay):
-    # Create a PyTorch dataset for training data
     train_dataset = TensorDataset(torch.Tensor(x_train), torch.Tensor(y_train))
 
-    # Create data loaders for batch processing for training data
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
-    # Create a PyTorch dataset for validation data
     val_dataset = TensorDataset(torch.Tensor(x_val), torch.Tensor(y_val))
 
-    # Create data loaders for batch processing for validation data
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
     # Define the architecture of the neural network
@@ -38,7 +34,6 @@ def neural_network(x_train, y_train, x_val, y_val, num_epochs, best_dropout_rate
     train_losses = []
     val_losses = []
 
-    # Train the model
     for epoch in range(num_epochs):
         # Training
         model.train()

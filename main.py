@@ -71,7 +71,6 @@ def leader_board_predict_fn(values, model_type):
     x_values_encoded = get_encoded(values)
     x_values_encoded = x_values_encoded.reindex(columns=x_train.columns, fill_value=0)
 
-    # Convert values_encoded to float type
     x_values_encoded = x_values_encoded.astype(float)
 
     values_tensor = torch.Tensor(x_values_encoded.values)
